@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SiPegawai</title>
+<title>SiPegawai - Lapas Saparua</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -107,13 +107,19 @@ body.idle-warn-active .sidebar { top: 44px; }
 .stat-val{font-size:1.5rem;font-weight:800;letter-spacing:-.04em;line-height:1;color:var(--navy);}
 
 /* TABLE */
-.tbl-wrap{overflow:hidden;border-radius:0 0 15px 15px;}
-table{width:100%;border-collapse:collapse;}
+.tbl-wrap{overflow-x:auto;overflow-y:visible;border-radius:0 0 15px 15px;-webkit-overflow-scrolling:touch;}
+.tbl-wrap::-webkit-scrollbar{height:5px;}
+.tbl-wrap::-webkit-scrollbar-track{background:var(--surface2);}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+.tbl-wrap::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+table{width:100%;border-collapse:collapse;min-width:600px;}
 thead th{padding:.8rem 1.1rem;font-size:.67rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.07em;border-bottom:2px solid var(--border);background:var(--navy-ll);white-space:nowrap;}
 tbody tr{border-bottom:1px solid var(--border);transition:background .12s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:var(--navy-ll);}
-tbody td{padding:.8rem 1.1rem;font-size:.875rem;vertical-align:middle;}
+tbody td{padding:.8rem 1.1rem;font-size:.875rem;vertical-align:middle;white-space:nowrap;}
+tbody td.wrap{white-space:normal;min-width:140px;}
+.tbl-scroll-hint{display:none;align-items:center;gap:.35rem;font-size:.72rem;color:var(--muted);padding:.35rem 1.1rem;background:var(--navy-ll);border-bottom:1px solid var(--border);}
 .av{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--navy),var(--accent));display:grid;place-items:center;font-weight:700;font-size:.77rem;color:#fff;flex-shrink:0;}
 .av-wrap{display:flex;align-items:center;gap:.7rem;}
 .emp-name{font-weight:700;font-size:.875rem;color:var(--navy);}
@@ -241,6 +247,15 @@ tbody td{padding:.8rem 1.1rem;font-size:.875rem;vertical-align:middle;}
   .main{margin-left:0;padding:1rem;}
   .stats-row{grid-template-columns:1fr 1fr;} .form-row,.info-grid{grid-template-columns:1fr;}
   .topbar{padding-left:.5rem;}
+  /* Tabel: scroll horizontal di mobile */
+  table{min-width:480px;}
+  thead th{padding:.65rem .8rem;font-size:.63rem;}
+  tbody td{padding:.65rem .8rem;font-size:.82rem;}
+  /* Hint scroll */
+  .tbl-scroll-hint{display:flex!important;}
+  /* Grid backup & setting jadi 1 kolom */
+  #pageSetting>div[style*="grid"],
+  #pageBackup>div[style*="grid"]{grid-template-columns:1fr!important;}
 }
 .hamburger{display:none;width:38px;height:38px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);color:var(--navy);cursor:pointer;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
 @media(max-width:900px){.hamburger{display:flex;}}
@@ -413,21 +428,21 @@ tbody td{padding:.8rem 1.1rem;font-size:.875rem;vertical-align:middle;}
     <div id="pageApproval" style="display:none">
       <div class="topbar"><div><div class="page-title">Approval User</div><div class="page-sub">Setujui atau tolak pendaftaran pegawai</div></div></div>
       <div class="toolbar"><div class="srch"><i class="fas fa-search"></i><input type="text" id="approvalQ" placeholder="Cari nama atau NIP..." oninput="filterApproval()"/></div><select class="fsel" id="approvalF" onchange="filterApproval()"><option value="">Semua Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>
-      <div class="card"><div class="tbl-wrap"><div id="approvalList"><div class="loading"><div class="spinner"></div>Memuat...</div></div><div id="approvalPgn" class="pgn" style="display:none"></div></div></div>
+      <div class="card"><div class="tbl-scroll-hint"><i class="fas fa-arrows-alt-h"></i> Geser ke samping untuk melihat semua kolom</div><div class="tbl-wrap"><div id="approvalList"><div class="loading"><div class="spinner"></div>Memuat...</div></div><div id="approvalPgn" class="pgn" style="display:none"></div></div></div>
     </div>
 
     <!-- SEMUA PEGAWAI -->
     <div id="pagePegawai" style="display:none">
       <div class="topbar"><div><div class="page-title">Semua Pegawai</div></div></div>
       <div class="toolbar"><div class="srch"><i class="fas fa-search"></i><input type="text" id="pegQ" placeholder="Cari nama atau NIP..." oninput="filterPeg()"/></div><select class="fsel" id="pegJabF" onchange="filterPeg()"><option value="">Semua Jabatan</option></select></div>
-      <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Pegawai</th><th>NIP</th><th>Jabatan</th><th>Email</th><th>Update</th><th>Aksi</th></tr></thead><tbody id="pegList"></tbody></table><div id="pegSkel"></div><div id="pegEmpty" class="empty" style="display:none"><i class="fas fa-search"></i><p>Tidak ada data.</p></div><div id="pegPgn" class="pgn" style="display:none"></div></div></div>
+      <div class="card"><div class="tbl-scroll-hint"><i class="fas fa-arrows-alt-h"></i> Geser ke samping untuk melihat semua kolom</div><div class="tbl-wrap"><table><thead><tr><th>Pegawai</th><th>NIP</th><th>Jabatan</th><th>Email</th><th>Update</th><th>Aksi</th></tr></thead><tbody id="pegList"></tbody></table><div id="pegSkel"></div><div id="pegEmpty" class="empty" style="display:none"><i class="fas fa-search"></i><p>Tidak ada data.</p></div><div id="pegPgn" class="pgn" style="display:none"></div></div></div>
     </div>
 
     <!-- SEMUA DOKUMEN ADMIN -->
     <div id="pageDokAdmin" style="display:none">
       <div class="topbar"><div><div class="page-title">Semua Dokumen</div></div></div>
       <div class="toolbar"><div class="srch"><i class="fas fa-search"></i><input type="text" id="dokAdminQ" placeholder="Cari nama file..." oninput="filterDokAdmin()"/></div><select class="fsel" id="dokAdminKatF" onchange="filterDokAdmin()"><option value="">Semua Kategori</option></select></div>
-      <div class="card"><div class="tbl-wrap"><table><thead><tr><th>File</th><th>Kategori</th><th>Keterangan</th><th>Pegawai</th><th>Ukuran</th><th>Diupload</th><th>Aksi</th></tr></thead><tbody id="dokAdminList"></tbody></table><div id="dokAdminSkel"></div><div id="dokAdminEmpty" class="empty" style="display:none"><i class="fas fa-folder-open"></i><p>Belum ada dokumen.</p></div><div id="dokAdminPgn" class="pgn" style="display:none"></div></div></div>
+      <div class="card"><div class="tbl-scroll-hint"><i class="fas fa-arrows-alt-h"></i> Geser ke samping untuk melihat semua kolom</div><div class="tbl-wrap"><table><thead><tr><th>File</th><th>Kategori</th><th>Keterangan</th><th>Pegawai</th><th>Ukuran</th><th>Diupload</th><th>Aksi</th></tr></thead><tbody id="dokAdminList"></tbody></table><div id="dokAdminSkel"></div><div id="dokAdminEmpty" class="empty" style="display:none"><i class="fas fa-folder-open"></i><p>Belum ada dokumen.</p></div><div id="dokAdminPgn" class="pgn" style="display:none"></div></div></div>
     </div>
 
     <!-- JABATAN -->
@@ -843,11 +858,11 @@ let upFile=null;
 // ═══════════════════════════════
 //  MODAL - Simple open/close
 // ═══════════════════════════════
-function openM(id){ 
-  document.getElementById(id).classList.add('show'); 
+function openM(id){
+  document.getElementById(id).classList.add('show');
 }
-function closeM(id){ 
-  document.getElementById(id).classList.remove('show'); 
+function closeM(id){
+  document.getElementById(id).classList.remove('show');
 }
 function setupOverlays(){
   document.addEventListener('click', function(e){
@@ -1051,7 +1066,7 @@ function showErr(boxId,txtId,msg){document.getElementById(boxId).style.display='
 
 async function loadSession(user){
   CU=user;
-  
+
   let prof=null;
   for(let i=0;i<3;i++){
     const{data}=await sb.from('profiles').select('*,jabatan(nama)').eq('id',user.id).maybeSingle();
