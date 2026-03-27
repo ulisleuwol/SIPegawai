@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SiPegawai - Lapas Saparua</title>
+<title>SiPegawai</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -1519,7 +1519,9 @@ function filterApproval(){
 async function approveU(id){
   const{error}=await sb.from('profiles').update({status_akun:'approved'}).eq('id',id).select();
   if(error){toast('Gagal: '+error.message,'err');return;}
-  toast('Akun disetujui ✓','ok');
+  // Kirim notifikasi email ke pegawai
+  await kirimNotifEmail(id,'approved');
+  toast('Akun disetujui ✓ — notifikasi email dikirim','ok');
   loadApproval(apvPage);loadDash();
 }
 
@@ -1570,8 +1572,40 @@ function showAlertBanner(msg, type='ok'){
 async function rejectU(id){
   const{error}=await sb.from('profiles').update({status_akun:'rejected'}).eq('id',id).select();
   if(error){toast('Gagal: '+error.message,'err');return;}
-  toast('Akun ditolak','info');
+  // Kirim notifikasi email ke pegawai
+  await kirimNotifEmail(id,'rejected');
+  toast('Akun ditolak — notifikasi email dikirim','info');
   loadApproval(apvPage);loadDash();
+}
+
+// ═══════════════════════════════
+//  NOTIFIKASI EMAIL
+// ═══════════════════════════════
+async function kirimNotifEmail(userId, status){
+  try{
+    // Ambil data profil pegawai untuk isi email
+    const{data:prof}=await sb.from('profiles')
+      .select('nama_lengkap,email,jabatan(nama)')
+      .eq('id',userId)
+      .maybeSingle();
+    if(!prof||!prof.email) return; // tidak ada email, skip
+
+    // Panggil RPC kirim_notif_email yang kita buat di Supabase
+    const{error}=await sb.rpc('kirim_notif_email',{
+      p_user_id: userId,
+      p_status:  status,
+      p_nama:    prof.nama_lengkap||'Pegawai',
+      p_email:   prof.email,
+      p_jabatan: prof.jabatan?.nama||''
+    });
+
+    if(error){
+      // Notif gagal tidak boleh menghentikan alur utama
+      console.warn('Notif email gagal (non-fatal):', error.message);
+    }
+  }catch(e){
+    console.warn('kirimNotifEmail error (non-fatal):', e.message);
+  }
 }
 
 // ═══════════════════════════════
