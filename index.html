@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SiPegawai</title>
+<title>SiPegawai - Lapas Saparua</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -21,6 +21,12 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* RESPONSIVE 2-COL GRID */
+.grid-2col{display:grid;grid-template-columns:1fr 1fr;gap:1.375rem;}
+@media(max-width:900px){
+  .grid-2col{grid-template-columns:1fr!important;}
+}
 
 /* IDLE WARNING */
 #idleWarningBar { font-family:'Plus Jakarta Sans',sans-serif; }
@@ -253,9 +259,16 @@ tbody td.wrap{white-space:normal;min-width:140px;}
   tbody td{padding:.65rem .8rem;font-size:.82rem;}
   /* Hint scroll */
   .tbl-scroll-hint{display:flex!important;}
-  /* Grid backup & setting jadi 1 kolom */
+  /* Semua grid 2 kolom jadi 1 kolom di mobile */
+  .grid-2col{grid-template-columns:1fr!important;}
   #pageSetting>div[style*="grid"],
   #pageBackup>div[style*="grid"]{grid-template-columns:1fr!important;}
+  /* Edit profil & setting: grid 2 kolom jadi 1 kolom */
+  .grid-2col{grid-template-columns:1fr!important;}
+  /* Form daftar: row jadi 1 kolom di mobile */
+  .auth-form-row{grid-template-columns:1fr!important;}
+  /* Edit profil: form-row dalam card juga 1 kolom */
+  #pageEditProfil .form-row{grid-template-columns:1fr;}
 }
 .hamburger{display:none;width:38px;height:38px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);color:var(--navy);cursor:pointer;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
 @media(max-width:900px){.hamburger{display:flex;}}
@@ -306,13 +319,13 @@ tbody td.wrap{white-space:normal;min-width:140px;}
         <div class="auth-tab active" onclick="switchAuth('reg')">Daftar</div>
       </div>
       <div class="alert-info alert-box"><i class="fas fa-info-circle"></i><div>Akun menunggu persetujuan admin setelah daftar.</div></div>
-      <div class="form-row">
+      <div class="form-row auth-form-row">
         <div class="form-group"><label class="form-label">Nama Lengkap *</label><input class="form-control" id="rNama" placeholder="Nama lengkap"/></div>
         <div class="form-group"><label class="form-label">NIP *</label><input class="form-control" id="rNip" placeholder="NIP" style="font-family:'JetBrains Mono',monospace;font-size:.8rem"/></div>
       </div>
       <div class="form-group"><label class="form-label">Jabatan *</label><select class="form-control" id="rJabatan"><option value="">Memuat jabatan...</option></select></div>
       <div class="form-group"><label class="form-label">Email *</label><input class="form-control" type="email" id="rEmail" placeholder="email@instansi.go.id"/></div>
-      <div class="form-row">
+      <div class="form-row auth-form-row">
         <div class="form-group"><label class="form-label">Password *</label><input class="form-control" type="password" id="rPass" placeholder="Min. 6 karakter"/></div>
         <div class="form-group"><label class="form-label">Konfirmasi *</label><input class="form-control" type="password" id="rPass2" placeholder="Ulangi"/></div>
       </div>
@@ -463,7 +476,7 @@ tbody td.wrap{white-space:normal;min-width:140px;}
     <!-- PENGATURAN -->
     <div id="pageSetting" style="display:none">
       <div class="topbar"><div><div class="page-title">Pengaturan</div></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.375rem;max-width:860px">
+      <div class="grid-2col" style="max-width:860px">
         <div class="card"><div class="card-hd"><span class="card-title"><i class="fas fa-cloud" style="color:var(--accent);margin-right:.4rem"></i>Cloudflare R2</span></div><div class="card-body">
           <div class="alert-info alert-box"><i class="fas fa-lock"></i><div>Hanya admin yang dapat mengubah konfigurasi R2.</div></div>
           <div class="form-group"><label class="form-label">Account ID</label><input class="form-control" id="r2AID" style="font-family:'JetBrains Mono',monospace;font-size:.79rem"/></div>
@@ -581,7 +594,7 @@ tbody td.wrap{white-space:normal;min-width:140px;}
     <!-- EDIT PROFIL -->
     <div id="pageEditProfil" style="display:none">
       <div class="topbar"><div><div class="page-title">Edit Profil & Password</div></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.375rem;max-width:860px">
+      <div class="grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:1.375rem;max-width:860px;width:100%">
         <div class="card"><div class="card-hd"><span class="card-title"><i class="fas fa-user" style="color:var(--accent);margin-right:.4rem"></i>Data Diri</span></div><div class="card-body">
           <div class="form-row"><div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" id="eNama"/></div><div class="form-group"><label class="form-label">NIP</label><input class="form-control" id="eNip" style="font-family:'JetBrains Mono',monospace;font-size:.79rem"/></div></div>
           <div class="form-group"><label class="form-label">Jabatan</label><select class="form-control" id="eJabatan"><option value="">Pilih jabatan...</option></select></div>
@@ -1234,7 +1247,15 @@ function setSidebar(p){
 //  JABATAN
 // ═══════════════════════════════
 async function loadJabatan(){
-  const{data}=await sb.from('jabatan').select('*').order('nama');
+  // Coba query langsung (berhasil jika sudah login / RLS izinkan authenticated)
+  let{data,error}=await sb.from('jabatan').select('*').order('nama');
+
+  // Jika gagal (user belum login / anon), gunakan RPC publik
+  if(error || !data || !data.length){
+    const res=await sb.rpc('get_jabatan_publik');
+    if(!res.error && res.data) data=res.data;
+  }
+
   allJabatan=data||[];
   ['rJabatan','eJabatan','pegJabF'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
