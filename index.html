@@ -28,6 +28,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   .grid-2col{grid-template-columns:1fr!important;}
 }
 
+/* HONEYPOT - sembunyikan dari user asli, bot akan isi */
+.hp-field{position:absolute;left:-9999px;top:-9999px;opacity:0;pointer-events:none;tab-index:-1;height:0;overflow:hidden;}
+
+/* HONEYPOT - sembunyikan dari user asli, bot akan isi */
+.hp-field{position:absolute;left:-9999px;top:-9999px;opacity:0;pointer-events:none;height:0;overflow:hidden;}
+
+/* HONEYPOT */
+.hp-field{position:absolute;left:-9999px;top:-9999px;opacity:0;pointer-events:none;height:0;overflow:hidden;}
+
+/* PASSWORD TOGGLE */
+.pw-wrap{position:relative;}
+.pw-wrap .form-control{padding-right:2.6rem;}
+.pw-toggle{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:.2rem;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center;}
+.pw-toggle:hover{color:var(--accent);}
+
 /* IDLE WARNING */
 #idleWarningBar { font-family:'Plus Jakarta Sans',sans-serif; }
 body.idle-warn-active .main { padding-top: 4rem; }
@@ -304,7 +319,7 @@ tbody td.wrap{white-space:normal;min-width:140px;}
         <div class="auth-tab" onclick="switchAuth('reg')">Daftar</div>
       </div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="lEmail" placeholder="email@instansi.go.id" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-      <div class="form-group"><label class="form-label">Password</label><input class="form-control" type="password" id="lPass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <div class="form-group"><label class="form-label">Password</label><div class="pw-wrap"><input class="form-control" type="password" id="lPass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/><button type="button" class="pw-toggle" onclick="togglePw('lPass')" tabindex="-1"><i class="fas fa-eye" id="eye_lPass"></i></button></div></div>
       <div style="text-align:right;margin-bottom:.4rem"><button class="btn-link" onclick="switchAuth('forgot')">Lupa password?</button></div>
       <button class="btn-main" id="btnLogin" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Masuk</button>
       <div id="lErr" class="alert-danger alert-box" style="display:none;margin-top:.875rem"><i class="fas fa-times-circle"></i><div id="lErrTxt"></div></div>
@@ -326,9 +341,17 @@ tbody td.wrap{white-space:normal;min-width:140px;}
       <div class="form-group"><label class="form-label">Jabatan *</label><select class="form-control" id="rJabatan"><option value="">Memuat jabatan...</option></select></div>
       <div class="form-group"><label class="form-label">Email *</label><input class="form-control" type="email" id="rEmail" placeholder="email@instansi.go.id"/></div>
       <div class="form-row auth-form-row">
-        <div class="form-group"><label class="form-label">Password *</label><input class="form-control" type="password" id="rPass" placeholder="Min. 6 karakter"/></div>
-        <div class="form-group"><label class="form-label">Konfirmasi *</label><input class="form-control" type="password" id="rPass2" placeholder="Ulangi"/></div>
+        <div class="form-group"><label class="form-label">Password *</label><div class="pw-wrap"><input class="form-control" type="password" id="rPass" placeholder="Min. 6 karakter"/><button type="button" class="pw-toggle" onclick="togglePw('rPass')" tabindex="-1"><i class="fas fa-eye" id="eye_rPass"></i></button></div></div>
+        <div class="form-group"><label class="form-label">Konfirmasi *</label><div class="pw-wrap"><input class="form-control" type="password" id="rPass2" placeholder="Ulangi"/><button type="button" class="pw-toggle" onclick="togglePw('rPass2')" tabindex="-1"><i class="fas fa-eye" id="eye_rPass2"></i></button></div></div>
       </div>
+      <!-- Honeypot: jangan diisi, hanya untuk deteksi bot -->
+      <div class="hp-field" aria-hidden="true">
+        <input type="text" id="hp_website" name="website" autocomplete="off" tabindex="-1" placeholder="Website"/>
+        <input type="text" id="hp_phone" name="phone" autocomplete="off" tabindex="-1" placeholder="Phone"/>
+      </div>
+      <!-- Timestamp daftar untuk deteksi submit terlalu cepat -->
+      <div class="hp-field" aria-hidden="true"><input type="text" id="hp_web" name="website" autocomplete="off" tabindex="-1"/><input type="text" id="hp_fax" name="fax" autocomplete="off" tabindex="-1"/></div>
+      <input type="hidden" id="regTimestamp" value=""/>
       <button class="btn-main" id="btnReg" onclick="doReg()"><i class="fas fa-user-plus"></i> Daftar Sekarang</button>
       <div id="rErr" class="alert-danger alert-box" style="display:none;margin-top:.875rem"><i class="fas fa-times-circle"></i><div id="rErrTxt"></div></div>
     </div>
@@ -364,8 +387,8 @@ tbody td.wrap{white-space:normal;min-width:140px;}
         <div class="auth-title">Buat Password Baru</div>
         <div style="font-size:.82rem;color:var(--muted)">Masukkan password baru kamu</div>
       </div>
-      <div class="form-group"><label class="form-label">Password Baru</label><input class="form-control" type="password" id="resetNewPass" placeholder="Min. 6 karakter"/></div>
-      <div class="form-group"><label class="form-label">Konfirmasi Password</label><input class="form-control" type="password" id="resetConfPass" placeholder="Ulangi password baru"/></div>
+      <div class="form-group"><label class="form-label">Password Baru</label><div class="pw-wrap"><input class="form-control" type="password" id="resetNewPass" placeholder="Min. 6 karakter"/><button type="button" class="pw-toggle" onclick="togglePw('resetNewPass')" tabindex="-1"><i class="fas fa-eye" id="eye_resetNewPass"></i></button></div></div>
+      <div class="form-group"><label class="form-label">Konfirmasi Password</label><div class="pw-wrap"><input class="form-control" type="password" id="resetConfPass" placeholder="Ulangi password baru"/><button type="button" class="pw-toggle" onclick="togglePw('resetConfPass')" tabindex="-1"><i class="fas fa-eye" id="eye_resetConfPass"></i></button></div></div>
       <button class="btn-main" id="btnResetPass" onclick="doResetPass()"><i class="fas fa-save"></i> Simpan Password Baru</button>
       <div id="resetMsg" style="display:none;margin-top:.875rem"></div>
     </div>
@@ -454,7 +477,7 @@ tbody td.wrap{white-space:normal;min-width:140px;}
     <!-- SEMUA DOKUMEN ADMIN -->
     <div id="pageDokAdmin" style="display:none">
       <div class="topbar"><div><div class="page-title">Semua Dokumen</div></div></div>
-      <div class="toolbar"><div class="srch"><i class="fas fa-search"></i><input type="text" id="dokAdminQ" placeholder="Cari nama file..." oninput="filterDokAdmin()"/></div><select class="fsel" id="dokAdminKatF" onchange="filterDokAdmin()"><option value="">Semua Kategori</option></select></div>
+      <div class="toolbar"><div class="srch"><i class="fas fa-search"></i><input type="text" id="dokAdminQ" placeholder="Cari nama file..." oninput="filterDokAdmin()"/></div><div class="srch" style="max-width:210px"><i class="fas fa-user"></i><input type="text" id="dokAdminPegQ" placeholder="Cari nama pegawai..." oninput="filterDokAdmin()"/></div><select class="fsel" id="dokAdminKatF" onchange="filterDokAdmin()"><option value="">Semua Kategori</option></select></div>
       <div class="card"><div class="tbl-scroll-hint"><i class="fas fa-arrows-alt-h"></i> Geser ke samping untuk melihat semua kolom</div><div class="tbl-wrap"><table><thead><tr><th>File</th><th>Kategori</th><th>Keterangan</th><th>Pegawai</th><th>Ukuran</th><th>Diupload</th><th>Aksi</th></tr></thead><tbody id="dokAdminList"></tbody></table><div id="dokAdminSkel"></div><div id="dokAdminEmpty" class="empty" style="display:none"><i class="fas fa-folder-open"></i><p>Belum ada dokumen.</p></div><div id="dokAdminPgn" class="pgn" style="display:none"></div></div></div>
     </div>
 
@@ -487,9 +510,11 @@ tbody td.wrap{white-space:normal;min-width:140px;}
           <div id="r2Stat" style="margin-top:.65rem;font-size:.79rem;color:var(--muted)"></div>
         </div></div>
         <div class="card"><div class="card-hd"><span class="card-title"><i class="fas fa-key" style="color:var(--warn);margin-right:.4rem"></i>Ubah Password</span></div><div class="card-body">
-          <div class="form-group"><label class="form-label">Password Baru</label><input class="form-control" type="password" id="aNP"/></div>
-          <div class="form-group"><label class="form-label">Konfirmasi</label><input class="form-control" type="password" id="aCP"/></div>
-          <button class="btn-p" onclick="changePass('aNP','aCP')" style="width:100%;justify-content:center"><i class="fas fa-save"></i> Ubah Password</button>
+          <div class="form-group"><label class="form-label">Password Lama</label><div class="pw-wrap"><input class="form-control" type="password" id="aOP" placeholder="Masukkan password saat ini"/><button type="button" class="pw-toggle" onclick="togglePw('aOP')" tabindex="-1"><i class="fas fa-eye" id="eye_aOP"></i></button></div></div>
+          <div class="form-group"><label class="form-label">Password Baru</label><div class="pw-wrap"><input class="form-control" type="password" id="aNP" placeholder="Min. 6 karakter"/><button type="button" class="pw-toggle" onclick="togglePw('aNP')" tabindex="-1"><i class="fas fa-eye" id="eye_aNP"></i></button></div></div>
+          <div class="form-group"><label class="form-label">Konfirmasi</label><div class="pw-wrap"><input class="form-control" type="password" id="aCP" placeholder="Ulangi password baru"/><button type="button" class="pw-toggle" onclick="togglePw('aCP')" tabindex="-1"><i class="fas fa-eye" id="eye_aCP"></i></button></div></div>
+          <button class="btn-p" id="btnChangePassAdmin" onclick="changePass('aNP','aCP','aOP','btnChangePassAdmin')" style="width:100%;justify-content:center"><i class="fas fa-save"></i> Ubah Password</button>
+          <div id="passAlertAdmin" style="display:none;margin-top:.65rem"></div>
         </div></div>
       </div>
     </div>
@@ -602,9 +627,11 @@ tbody td.wrap{white-space:normal;min-width:140px;}
           <div style="display:flex;gap:.7rem"><button class="btn-s" style="flex:1;justify-content:center" onclick="showPage('profil')">Batal</button><button class="btn-p" style="flex:2;justify-content:center" id="btnSavePro" onclick="savePro()"><i class="fas fa-save"></i> Simpan</button></div>
         </div></div>
         <div class="card"><div class="card-hd"><span class="card-title"><i class="fas fa-key" style="color:var(--warn);margin-right:.4rem"></i>Ubah Password</span></div><div class="card-body">
-          <div class="form-group"><label class="form-label">Password Baru</label><input class="form-control" type="password" id="uNP"/></div>
-          <div class="form-group"><label class="form-label">Konfirmasi</label><input class="form-control" type="password" id="uCP"/></div>
-          <button class="btn-p" onclick="changePass('uNP','uCP')" style="width:100%;justify-content:center"><i class="fas fa-save"></i> Ubah Password</button>
+          <div class="form-group"><label class="form-label">Password Lama</label><div class="pw-wrap"><input class="form-control" type="password" id="uOP" placeholder="Masukkan password saat ini"/><button type="button" class="pw-toggle" onclick="togglePw('uOP')" tabindex="-1"><i class="fas fa-eye" id="eye_uOP"></i></button></div></div>
+          <div class="form-group"><label class="form-label">Password Baru</label><div class="pw-wrap"><input class="form-control" type="password" id="uNP" placeholder="Min. 6 karakter"/><button type="button" class="pw-toggle" onclick="togglePw('uNP')" tabindex="-1"><i class="fas fa-eye" id="eye_uNP"></i></button></div></div>
+          <div class="form-group"><label class="form-label">Konfirmasi</label><div class="pw-wrap"><input class="form-control" type="password" id="uCP" placeholder="Ulangi password baru"/><button type="button" class="pw-toggle" onclick="togglePw('uCP')" tabindex="-1"><i class="fas fa-eye" id="eye_uCP"></i></button></div></div>
+          <button class="btn-p" id="btnChangePassUser" onclick="changePass('uNP','uCP','uOP','btnChangePassUser')" style="width:100%;justify-content:center"><i class="fas fa-save"></i> Ubah Password</button>
+          <div id="passAlertUser" style="display:none;margin-top:.65rem"></div>
         </div></div>
       </div>
     </div>
@@ -954,6 +981,8 @@ function switchAuth(v){
   const map={login:'vLogin',reg:'vReg',forgot:'vForgot',pending:'vPending',reset:'vReset'};
   if(map[v])document.getElementById(map[v]).style.display='block';
   document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active',(v==='login'&&t.textContent==='Masuk')||(v==='reg'&&t.textContent==='Daftar')));
+  // Catat waktu form daftar dibuka untuk deteksi submit terlalu cepat
+  if(v==='reg'){ const ts=document.getElementById('regTimestamp'); if(ts) ts.value=Date.now(); }
   ['lErr','rErr'].forEach(id=>document.getElementById(id).style.display='none');
 }
 
@@ -971,10 +1000,68 @@ async function doReg(){
   const nama=document.getElementById('rNama').value.trim(),nip=document.getElementById('rNip').value.trim();
   const jabId=document.getElementById('rJabatan').value,email=document.getElementById('rEmail').value.trim();
   const pass=document.getElementById('rPass').value,pass2=document.getElementById('rPass2').value;
+
+  // ── LAPIS 1: Honeypot — jika field tersembunyi terisi, ini bot ──
+  const hpWeb=document.getElementById('hp_web')?.value||'';
+  const hpFax=document.getElementById('hp_fax')?.value||'';
+  if(hpWeb||hpFax){
+    // Pura-pura berhasil agar bot tidak tahu terdeteksi
+    console.warn('Bot detected via honeypot');
+    showRegSuccess('Pengguna','');
+    return;
+  }
+
+  // ── LAPIS 2: Deteksi submit terlalu cepat (< 3 detik) — bot biasanya sangat cepat ──
+  const tsEl=document.getElementById('regTimestamp');
+  const tsVal=tsEl?parseInt(tsEl.value||'0'):0;
+  if(tsVal>0 && (Date.now()-tsVal)<3000){
+    showErr('rErr','rErrTxt','Pendaftaran terlalu cepat. Mohon isi formulir dengan benar.');
+    return;
+  }
+
+  // ── LAPIS 3: Rate limiting browser — max 3 percobaan per 10 menit ──
+  const RL_KEY='reg_attempts', RL_MAX=3, RL_WINDOW=10*60*1000;
+  try{
+    const stored=sessionStorage.getItem(RL_KEY);
+    const rl=stored?JSON.parse(stored):{count:0,first:Date.now()};
+    const now=Date.now();
+    // Reset window jika sudah lewat 10 menit
+    if(now-rl.first>RL_WINDOW){ rl.count=0; rl.first=now; }
+    if(rl.count>=RL_MAX){
+      const sisaMs=RL_WINDOW-(now-rl.first);
+      const sisamenit=Math.ceil(sisaMs/60000);
+      showErr('rErr','rErrTxt',`Terlalu banyak percobaan pendaftaran. Coba lagi dalam ${sisamenit} menit.`);
+      // Kunci tombol sampai window reset
+      const btn2=document.getElementById('btnReg');
+      if(btn2){ btn2.disabled=true; btn2.innerHTML=`<i class="fas fa-lock"></i> Tunggu ${sisamenit} menit`; }
+      return;
+    }
+    rl.count++;
+    sessionStorage.setItem(RL_KEY,JSON.stringify(rl));
+  }catch(e){ /* abaikan error storage */ }
+
+  // ── LAPIS 4: Validasi input ketat ──
   if(!nama||!nip||!jabId||!email||!pass){showErr('rErr','rErrTxt','Semua field wajib diisi!');return;}
+  // NIP harus 18 digit angka
+  if(!/^[0-9]{18}$/.test(nip)){showErr('rErr','rErrTxt','NIP harus tepat 18 digit angka.');return;}
+  // Nama minimal 3 karakter, hanya huruf dan spasi
+  if(nama.length<3){showErr('rErr','rErrTxt','Nama lengkap minimal 3 karakter.');return;}
+  if(!/^[a-zA-Z\s'.,-]+$/.test(nama)){showErr('rErr','rErrTxt','Nama lengkap hanya boleh berisi huruf.');return;}
   if(pass!==pass2){showErr('rErr','rErrTxt','Password tidak cocok!');return;}
   if(pass.length<6){showErr('rErr','rErrTxt','Password minimal 6 karakter!');return;}
+
   const btn=document.getElementById('btnReg');setBtn(btn,true);
+
+  // ── LAPIS 5: Cek server-side rate limit via RPC ──
+  try{
+    const{data:rlCheck,error:rlErr}=await sb.rpc('cek_boleh_daftar',{p_email:email});
+    if(!rlErr && rlCheck && rlCheck.boleh===false){
+      setBtn(btn,false,'<i class="fas fa-user-plus"></i> Daftar Sekarang');
+      showErr('rErr','rErrTxt',rlCheck.pesan||'Terlalu banyak percobaan. Coba lagi nanti.');
+      return;
+    }
+  }catch(e){ /* RPC belum ada, lanjut tanpa server check */ }
+
   const siteUrl=window.location.origin+window.location.pathname; // → http://localhost/sipegawai/
   const{data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:siteUrl}});
   setBtn(btn,false,'<i class="fas fa-user-plus"></i> Daftar Sekarang');
@@ -1199,43 +1286,113 @@ async function doLogout(){
   switchAuth('login');
 }
 
-async function changePass(nId,cId){
-  const np=document.getElementById(nId).value,cp=document.getElementById(cId).value;
-  if(!np||!cp){toast('Password wajib diisi!','warn');return;}
-  if(np!==cp){toast('Password tidak cocok!','warn');return;}
-  if(np.length<6){toast('Minimal 6 karakter!','warn');return;}
-  // Cari tombol yang relevan
-  const btn=document.querySelector(`button[onclick*="${nId}"]`);
+async function changePass(nId,cId,opId,btnId){
+  const np=document.getElementById(nId)?.value||'';
+  const cp=document.getElementById(cId)?.value||'';
+  const op=opId?document.getElementById(opId)?.value||'':'';
+  const btn=btnId?document.getElementById(btnId):null;
+
+  // Helper tampilkan alert inline di bawah tombol
+  function showInlineAlert(msg, type){
+    // Tentukan container alert berdasarkan btnId
+    const alertId = btnId==='btnChangePassAdmin'?'passAlertAdmin':'passAlertUser';
+    const box=document.getElementById(alertId);
+    if(!box)return;
+    const cls={err:'alert-danger',warn:'alert-warn',ok:'alert-success'};
+    const ico={err:'fa-times-circle',warn:'fa-exclamation-triangle',ok:'fa-check-circle'};
+    box.className=`alert-box ${cls[type]||'alert-warn'}`;
+    box.innerHTML=`<i class="fas ${ico[type]||'fa-exclamation-triangle'}"></i><div>${msg}</div>`;
+    box.style.display='flex';
+    if(type==='ok') setTimeout(()=>{ box.style.display='none'; },4000);
+  }
+
+  function clearAlert(){
+    const alertId = btnId==='btnChangePassAdmin'?'passAlertAdmin':'passAlertUser';
+    const box=document.getElementById(alertId);
+    if(box) box.style.display='none';
+  }
+
+  clearAlert();
+
+  // ── Validasi ──────────────────────────────────
+  if(opId&&!op){
+    showInlineAlert('Masukkan <strong>password lama</strong> terlebih dahulu.','warn');
+    document.getElementById(opId)?.focus(); return;
+  }
+  if(!np){
+    showInlineAlert('Masukkan <strong>password baru</strong>.','warn');
+    document.getElementById(nId)?.focus(); return;
+  }
+  if(np.length<6){
+    showInlineAlert('Password baru minimal <strong>6 karakter</strong>.','warn');
+    document.getElementById(nId)?.focus(); return;
+  }
+  if(!cp){
+    showInlineAlert('Masukkan <strong>konfirmasi password</strong>.','warn');
+    document.getElementById(cId)?.focus(); return;
+  }
+  if(np!==cp){
+    showInlineAlert('Konfirmasi password <strong>tidak cocok</strong> dengan password baru.','err');
+    document.getElementById(cId).value='';
+    document.getElementById(cId)?.focus(); return;
+  }
+  if(opId&&op===np){
+    showInlineAlert('Password baru <strong>tidak boleh sama</strong> dengan password lama.','warn');
+    document.getElementById(nId).value='';
+    document.getElementById(nId)?.focus(); return;
+  }
+
   if(btn)setBtn(btn,true);
+
+  // ── Verifikasi password lama ──────────────────
+  if(opId&&op){
+    const{data:{user}}=await sb.auth.getUser();
+    if(!user?.email){
+      showInlineAlert('Sesi tidak valid, silakan <strong>login ulang</strong>.','err');
+      if(btn)setBtn(btn,false,'<i class="fas fa-save"></i> Ubah Password');
+      return;
+    }
+    const{error:signErr}=await sb.auth.signInWithPassword({email:user.email,password:op});
+    if(signErr){
+      if(btn)setBtn(btn,false,'<i class="fas fa-save"></i> Ubah Password');
+      showInlineAlert('Password lama <strong>salah</strong>. Periksa kembali dan coba lagi.','err');
+      document.getElementById(opId).value='';
+      document.getElementById(opId)?.focus();
+      return;
+    }
+  }
+
+  // ── Simpan password baru ──────────────────────
   const{error}=await sb.auth.updateUser({password:np});
   if(btn)setBtn(btn,false,'<i class="fas fa-save"></i> Ubah Password');
   if(error){
-    toast('Gagal ubah password: '+error.message,'err');
+    showInlineAlert('Gagal ubah password: '+error.message,'err');
     return;
   }
+
+  // Berhasil — kosongkan semua field
   document.getElementById(nId).value='';
   document.getElementById(cId).value='';
+  if(opId)document.getElementById(opId).value='';
+  showInlineAlert('Password berhasil diubah! Gunakan password baru saat login berikutnya.','ok');
   toast('✓ Password berhasil diubah!','ok');
-  // Tampilkan alert di halaman juga
-  showPassAlert(nId);
 }
 
-function showPassAlert(nId){
-  // Cari container terdekat dan tampilkan alert sukses
-  const inp=document.getElementById(nId);
+// Toggle show/hide password
+function togglePw(id){
+  const inp=document.getElementById(id);
+  const ico=document.getElementById('eye_'+id);
   if(!inp)return;
-  const card=inp.closest('.card-body');
-  if(!card)return;
-  // Hapus alert lama jika ada
-  const old=card.querySelector('.pass-alert');
-  if(old)old.remove();
-  const el=document.createElement('div');
-  el.className='alert-success alert-box pass-alert';
-  el.style.marginTop='.75rem';
-  el.innerHTML='<i class="fas fa-check-circle"></i><div>Password berhasil diubah!</div>';
-  card.appendChild(el);
-  setTimeout(()=>el.remove(),4000);
+  if(inp.type==='password'){
+    inp.type='text';
+    if(ico){ico.classList.remove('fa-eye');ico.classList.add('fa-eye-slash');}
+  } else {
+    inp.type='password';
+    if(ico){ico.classList.remove('fa-eye-slash');ico.classList.add('fa-eye');}
+  }
 }
+
+
 
 function setSidebar(p){
   document.getElementById('sbAv').textContent=ini(p.nama_lengkap);
@@ -1699,30 +1856,76 @@ async function openMPeg(id){
 // ═══════════════════════════════
 //  SEMUA DOKUMEN ADMIN
 // ═══════════════════════════════
-let dakPage=1,dakTotal=0,dakF={q:'',katId:''};
+let dakPage=1,dakTotal=0,dakF={q:'',katId:'',pegQ:''};
 async function loadDokAdmin(p=1){
-  dakPage=p;skel('dokAdminSkel');document.getElementById('dokAdminList').innerHTML='';document.getElementById('dokAdminEmpty').style.display='none';
+  dakPage=p;
+
+  // Reset UI state sebelum query — cegah empty muncul bersamaan dengan data
+  const listEl=document.getElementById('dokAdminList');
+  const emptyEl=document.getElementById('dokAdminEmpty');
+  const skelEl=document.getElementById('dokAdminSkel');
+  const pgnEl=document.getElementById('dokAdminPgn');
+  listEl.innerHTML='';
+  emptyEl.style.display='none';
+  if(pgnEl) pgnEl.style.display='none';
+  skel('dokAdminSkel');
+
   // Guard: pastikan session aktif
   const{data:{session:s}}=await sb.auth.getSession();
-  if(!s){ toast('Sesi habis, silakan login ulang.','warn'); return; }
+  if(!s){ toast('Sesi habis, silakan login ulang.','warn'); skelEl.innerHTML=''; return; }
+
   const from=(p-1)*PS,to=from+PS-1;
   let q=sb.from('dokumen').select('*,profiles(nama_lengkap,nip),kategori_dokumen:kategori_id(nama)',{count:'exact'});
   if(dakF.katId) q=q.eq('kategori_id',dakF.katId);
   if(dakF.q) q=q.ilike('nama_file','%'+dakF.q+'%');
+
+  // Filter nama pegawai: cari user_id yang nama_lengkapnya cocok dulu
+  if(dakF.pegQ){
+    const{data:pegMatch}=await sb.from('profiles')
+      .select('id')
+      .ilike('nama_lengkap','%'+dakF.pegQ+'%');
+    const matchIds=(pegMatch||[]).map(x=>x.id);
+    if(matchIds.length===0){
+      skelEl.innerHTML='';
+      emptyEl.style.display='block';
+      return;
+    }
+    q=q.in('user_id',matchIds);
+  }
+
   const{data,count}=await q.order('uploaded_at',{ascending:false}).range(from,to);
-  dakTotal=count||0;document.getElementById('dokAdminSkel').innerHTML='';
-  if(!data||!data.length){document.getElementById('dokAdminEmpty').style.display='block';return;}
-  document.getElementById('dokAdminList').innerHTML=data.map(d=>`<tr>
+  dakTotal=count||0;
+  skelEl.innerHTML='';
+
+  // Sembunyikan empty dulu sebelum render — cegah tampil bersamaan
+  emptyEl.style.display='none';
+
+  if(!data||!data.length){
+    emptyEl.style.display='block';
+    return;
+  }
+
+  listEl.innerHTML=data.map(d=>`<tr>
     <td><div style="display:flex;align-items:center;gap:.6rem"><div class="doc-ico" style="background:${dBg(d.nama_file)};color:${dClr(d.nama_file)};width:30px;height:30px;border-radius:7px"><i class="fas ${dIco(d.nama_file)}"></i></div><span style="font-weight:600;font-size:.84rem;color:var(--navy)">${d.nama_file}</span></div></td>
     <td><span class="chip chip-navy">${d.kategori_dokumen?.nama||'—'}</span></td>
     <td style="font-size:.82rem;color:var(--muted);max-width:180px"><span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${d.keterangan||'—'}</span></td>
     <td><div class="emp-name">${d.profiles?.nama_lengkap||'—'}</div><div class="emp-nip">${d.profiles?.nip||''}</div></td>
     <td style="font-size:.77rem;color:var(--muted)">${fmtSz(d.ukuran_file)}</td>
     <td style="font-size:.77rem;color:var(--muted)">${fmtD(d.uploaded_at)}</td>
-    <td><button class="btn-ok" onclick="adminOpenDok('${d.r2_key}','${(d.nama_file||'').replace(/'/g,"\\'")}')"><i class="fas fa-download"></i> Buka</button></td></tr>`).join('');
+    <td><button class="btn-ok" onclick="adminOpenDok('${d.r2_key}','${(d.nama_file||'').replace(/'/g,"\'")}')"><i class="fas fa-download"></i> Buka</button></td></tr>`).join('');
   pgn('dokAdminPgn',p,dakTotal,'loadDokAdmin');
 }
-function filterDokAdmin(){dakF.q=document.getElementById('dokAdminQ').value.trim();dakF.katId=document.getElementById('dokAdminKatF').value;loadDokAdmin(1);}
+
+// Debounce filter agar tidak query terlalu sering saat mengetik
+let dakFilterTimer=null;
+function filterDokAdmin(){
+  clearTimeout(dakFilterTimer);
+  dakF.q=document.getElementById('dokAdminQ').value.trim();
+  dakF.katId=document.getElementById('dokAdminKatF').value;
+  dakF.pegQ=(document.getElementById('dokAdminPegQ')?.value||'').trim();
+  // Kategori dropdown: langsung query. Text input: tunggu 350ms setelah berhenti ketik
+  dakFilterTimer=setTimeout(()=>loadDokAdmin(1), 350);
+}
 
 async function adminOpenDok(r2Key, nama){
   if(!r2Key){toast('File tidak ditemukan!','err');return;}
