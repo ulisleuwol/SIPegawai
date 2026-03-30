@@ -121,6 +121,10 @@ body.idle-warn-active .sidebar { top: 44px; }
 
 /* STATS */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.75rem;}
+.stats-dash{grid-template-columns:repeat(3,1fr)!important;}
+@media(max-width:600px){.stats-dash{grid-template-columns:1fr!important;}}
+.stats-dash{grid-template-columns:repeat(3,1fr);}
+@media(max-width:600px){.stats-dash{grid-template-columns:1fr;}}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem;box-shadow:var(--shadow);display:flex;align-items:center;gap:.875rem;}
 .stat-card:hover{transform:translateY(-2px);}
 .stat-ico{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;font-size:1.05rem;flex-shrink:0;}
@@ -266,7 +270,14 @@ tbody td.wrap{white-space:normal;min-width:140px;}
   .sidebar{transform:translateX(-100%);transition:transform .3s;display:flex!important;}
   .sidebar.open{transform:translateX(0);}
   .main{margin-left:0;padding:1rem;}
-  .stats-row{grid-template-columns:1fr 1fr;} .form-row,.info-grid{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr 1fr;} .stats-dash{grid-template-columns:1fr 1fr;} .form-row,.info-grid{grid-template-columns:1fr;}
+  .stat-card{padding:.8rem;gap:.6rem;}
+  .stat-val{font-size:1.2rem;}
+  .stat-ico{width:36px;height:36px;font-size:.9rem;}
+  /* Dashboard stats: 1 kolom di layar sangat kecil */
+  .stat-card{padding:.8rem;gap:.6rem;}
+  .stat-val{font-size:1.2rem;}
+  .stat-ico{width:36px;height:36px;font-size:.9rem;}
   .topbar{padding-left:.5rem;}
   /* Tabel: scroll horizontal di mobile */
   table{min-width:480px;}
@@ -336,7 +347,7 @@ tbody td.wrap{white-space:normal;min-width:140px;}
       <div class="alert-info alert-box"><i class="fas fa-info-circle"></i><div>Akun menunggu persetujuan admin setelah daftar.</div></div>
       <div class="form-row auth-form-row">
         <div class="form-group"><label class="form-label">Nama Lengkap *</label><input class="form-control" id="rNama" placeholder="Nama lengkap"/></div>
-        <div class="form-group"><label class="form-label">NIP *</label><input class="form-control" id="rNip" placeholder="NIP" style="font-family:'JetBrains Mono',monospace;font-size:.8rem"/></div>
+        <div class="form-group"><label class="form-label">NIP *</label><input class="form-control" id="rNip" placeholder="18 digit angka" inputmode="numeric" style="font-family:'JetBrains Mono',monospace;font-size:.8rem" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/></div>
       </div>
       <div class="form-group"><label class="form-label">Jabatan *</label><select class="form-control" id="rJabatan"><option value="">Memuat jabatan...</option></select></div>
       <div class="form-group"><label class="form-label">Email *</label><input class="form-control" type="email" id="rEmail" placeholder="email@instansi.go.id"/></div>
@@ -451,8 +462,8 @@ tbody td.wrap{white-space:normal;min-width:140px;}
 
     <!-- DASH -->
     <div id="pageDash" style="display:none">
-      <div class="topbar"><div><div class="page-title">Dashboard</div><div class="page-sub" id="dashGreet"></div></div><button class="btn-s" onclick="loadDash()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-      <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
+      <div class="topbar"><div><div class="page-title">Dashboard</div><div class="page-sub" id="dashGreet"></div></div></div>
+      <div class="stats-row stats-dash">
         <div class="stat-card"><div class="stat-ico" style="background:var(--navy-l);color:var(--navy)"><i class="fas fa-users"></i></div><div><div class="stat-lbl">Total Pegawai</div><div class="stat-val" id="stTotal">—</div></div></div>
         <div class="stat-card"><div class="stat-ico" style="background:var(--warn-l);color:#92400e"><i class="fas fa-user-clock"></i></div><div><div class="stat-lbl">Menunggu Approval</div><div class="stat-val" id="stPending">—</div></div></div>
         <div class="stat-card"><div class="stat-ico" style="background:var(--accent2-l);color:var(--accent2)"><i class="fas fa-file-alt"></i></div><div><div class="stat-lbl">Total Dokumen</div><div class="stat-val" id="stDok">—</div></div></div>
@@ -523,7 +534,7 @@ tbody td.wrap{white-space:normal;min-width:140px;}
     <div id="pageBackup" style="display:none">
       <div class="topbar">
         <div><div class="page-title">Backup & Export</div><div class="page-sub">Unduh salinan data untuk pemulihan darurat</div></div>
-        <button class="btn-s" onclick="loadBackupPage()"><i class="fas fa-sync-alt"></i> Refresh</button>
+
       </div>
 
       <!-- Status Bar -->
@@ -997,58 +1008,61 @@ async function doLogin(){
 }
 
 async function doReg(){
-  const nama=document.getElementById('rNama').value.trim(),nip=document.getElementById('rNip').value.trim();
-  const jabId=document.getElementById('rJabatan').value,email=document.getElementById('rEmail').value.trim();
-  const pass=document.getElementById('rPass').value,pass2=document.getElementById('rPass2').value;
+  // Bersihkan input — strip whitespace dan karakter non-angka dari NIP
+  const nama=document.getElementById('rNama').value.trim();
+  const nip=document.getElementById('rNip').value.replace(/[^0-9]/g,''); // hanya angka
+  const jabId=document.getElementById('rJabatan').value;
+  const email=document.getElementById('rEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('rPass').value;
+  const pass2=document.getElementById('rPass2').value;
 
-  // ── LAPIS 1: Honeypot — jika field tersembunyi terisi, ini bot ──
+  // ── LAPIS 1: Honeypot ──
   const hpWeb=document.getElementById('hp_web')?.value||'';
   const hpFax=document.getElementById('hp_fax')?.value||'';
   if(hpWeb||hpFax){
-    // Pura-pura berhasil agar bot tidak tahu terdeteksi
     console.warn('Bot detected via honeypot');
     showRegSuccess('Pengguna','');
     return;
   }
 
-  // ── LAPIS 2: Deteksi submit terlalu cepat (< 3 detik) — bot biasanya sangat cepat ──
+  // ── LAPIS 2: Deteksi submit terlalu cepat < 3 detik ──
   const tsEl=document.getElementById('regTimestamp');
   const tsVal=tsEl?parseInt(tsEl.value||'0'):0;
-  if(tsVal>0 && (Date.now()-tsVal)<3000){
-    showErr('rErr','rErrTxt','Pendaftaran terlalu cepat. Mohon isi formulir dengan benar.');
+  if(tsVal>0&&(Date.now()-tsVal)<3000){
+    showErr('rErr','rErrTxt','Mohon isi formulir dengan lengkap dan benar sebelum mendaftar.');
     return;
   }
 
-  // ── LAPIS 3: Rate limiting browser — max 3 percobaan per 10 menit ──
-  const RL_KEY='reg_attempts', RL_MAX=3, RL_WINDOW=10*60*1000;
+  // ── LAPIS 3: Rate limit browser — max 3 percobaan per 30 menit ──
+  const RL_KEY='reg_rl', RL_MAX=5, RL_WIN=3*60*1000;
   try{
-    const stored=sessionStorage.getItem(RL_KEY);
+    const stored=localStorage.getItem(RL_KEY);
     const rl=stored?JSON.parse(stored):{count:0,first:Date.now()};
     const now=Date.now();
-    // Reset window jika sudah lewat 10 menit
-    if(now-rl.first>RL_WINDOW){ rl.count=0; rl.first=now; }
+    if(now-rl.first>RL_WIN){ rl.count=0; rl.first=now; }
     if(rl.count>=RL_MAX){
-      const sisaMs=RL_WINDOW-(now-rl.first);
-      const sisamenit=Math.ceil(sisaMs/60000);
-      showErr('rErr','rErrTxt',`Terlalu banyak percobaan pendaftaran. Coba lagi dalam ${sisamenit} menit.`);
-      // Kunci tombol sampai window reset
-      const btn2=document.getElementById('btnReg');
-      if(btn2){ btn2.disabled=true; btn2.innerHTML=`<i class="fas fa-lock"></i> Tunggu ${sisamenit} menit`; }
+      const sisaMs=RL_WIN-(now-rl.first);
+      const sisaMnt=Math.ceil(sisaMs/60000);
+      showErr('rErr','rErrTxt',
+        `Pendaftaran dibatasi untuk mencegah penyalahgunaan. Silakan coba lagi dalam ${sisaMnt} menit, atau hubungi admin jika ada masalah.`
+      );
       return;
     }
     rl.count++;
-    sessionStorage.setItem(RL_KEY,JSON.stringify(rl));
-  }catch(e){ /* abaikan error storage */ }
+    localStorage.setItem(RL_KEY,JSON.stringify(rl));
+  }catch(e){}
 
-  // ── LAPIS 4: Validasi input ketat ──
-  if(!nama||!nip||!jabId||!email||!pass){showErr('rErr','rErrTxt','Semua field wajib diisi!');return;}
-  // NIP harus 18 digit angka
-  if(!/^[0-9]{18}$/.test(nip)){showErr('rErr','rErrTxt','NIP harus tepat 18 digit angka.');return;}
-  // Nama minimal 3 karakter, hanya huruf dan spasi
+  // ── LAPIS 4: Validasi input ──
+  if(!nama){showErr('rErr','rErrTxt','Nama lengkap wajib diisi.');return;}
   if(nama.length<3){showErr('rErr','rErrTxt','Nama lengkap minimal 3 karakter.');return;}
-  if(!/^[a-zA-Z\s'.,-]+$/.test(nama)){showErr('rErr','rErrTxt','Nama lengkap hanya boleh berisi huruf.');return;}
-  if(pass!==pass2){showErr('rErr','rErrTxt','Password tidak cocok!');return;}
-  if(pass.length<6){showErr('rErr','rErrTxt','Password minimal 6 karakter!');return;}
+  if(!nip){showErr('rErr','rErrTxt','NIP wajib diisi.');return;}
+  if(nip.length!==18){showErr('rErr','rErrTxt',`NIP harus 18 digit angka (sekarang ${nip.length} digit). Spasi dan tanda baca diabaikan otomatis.`);return;}
+  if(!jabId){showErr('rErr','rErrTxt','Pilih jabatan terlebih dahulu.');return;}
+  if(!email){showErr('rErr','rErrTxt','Email wajib diisi.');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showErr('rErr','rErrTxt','Format email tidak valid. Contoh: nama@instansi.go.id');return;}
+  if(!pass){showErr('rErr','rErrTxt','Password wajib diisi.');return;}
+  if(pass.length<6){showErr('rErr','rErrTxt','Password minimal 6 karakter.');return;}
+  if(pass!==pass2){showErr('rErr','rErrTxt','Konfirmasi password tidak cocok.');return;}
 
   const btn=document.getElementById('btnReg');setBtn(btn,true);
 
@@ -1068,19 +1082,58 @@ async function doReg(){
   if(error){showErr('rErr','rErrTxt',error.message);return;}
   if(!data.user){showErr('rErr','rErrTxt','Email sudah terdaftar. Silakan login.');return;}
 
-  // Langsung simpan profile ke Supabase (tidak perlu verifikasi email)
-  const{error:profErr}=await sb.from('profiles').upsert({
+  // Simpan profile ke Supabase dengan retry otomatis jika gagal
+  const profilePayload={
     id: data.user.id,
     nama_lengkap: nama,
-    nip,
+    nip: nip,          // sudah bersih (hanya angka)
     jabatan_id: jabId,
-    email,
+    email: email,
     status_akun: 'pending',
-    role: 'user'
-  });
+    role: 'user',
+    updated_at: new Date().toISOString()
+  };
 
-  if(profErr){
-    console.warn('Profile save error:',profErr.message);
+  let profSaved=false;
+  let profErr=null;
+
+  // Coba upsert sampai 3 kali dengan jeda 700ms
+  for(let attempt=1; attempt<=3; attempt++){
+    const res=await sb.from('profiles').upsert(profilePayload, {onConflict:'id'});
+    if(!res.error){
+      profSaved=true;
+      break;
+    }
+    profErr=res.error;
+    console.warn(`Profile save attempt ${attempt} failed:`, res.error.message);
+    if(attempt<3) await new Promise(r=>setTimeout(r,700));
+  }
+
+  if(!profSaved){
+    // Coba insert biasa sebagai fallback jika upsert terus gagal
+    const{error:insErr}=await sb.from('profiles').insert(profilePayload);
+    if(!insErr){
+      profSaved=true;
+    } else {
+      console.error('Profile insert fallback failed:', insErr.message);
+      // Tampilkan error ke user — jangan biarkan data null
+      setBtn(btn,false,'<i class="fas fa-user-plus"></i> Daftar Sekarang');
+      showErr('rErr','rErrTxt',
+        'Akun berhasil dibuat tapi data profil gagal disimpan. Silakan hubungi admin dengan menyebutkan email: '+email
+      );
+      return;
+    }
+  }
+
+  // Verifikasi data tersimpan dengan benar
+  const{data:checkProf}=await sb.from('profiles')
+    .select('id,nama_lengkap,nip')
+    .eq('id',data.user.id)
+    .maybeSingle();
+
+  if(!checkProf||!checkProf.nama_lengkap){
+    // Data tidak tersimpan — coba sekali lagi
+    await sb.from('profiles').upsert(profilePayload, {onConflict:'id'});
   }
 
   // Tampilkan halaman sukses daftar
