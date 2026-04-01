@@ -347,8 +347,12 @@ tbody td.wrap{white-space:normal;min-width:140px;}
       <div class="alert-info alert-box"><i class="fas fa-info-circle"></i><div>Akun menunggu persetujuan admin setelah daftar.</div></div>
       <div class="form-row auth-form-row">
         <div class="form-group"><label class="form-label">Nama Lengkap *</label><input class="form-control" id="rNama" placeholder="Nama lengkap" maxlength="100" autocomplete="name" required/></div>
-        <div class="form-group"><label class="form-label">NIP *</label><input class="form-control" id="rNip" placeholder="18 digit angka" inputmode="numeric" maxlength="18" style="font-family:'JetBrains Mono',monospace;font-size:.8rem" autocomplete="off" required
-          oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,18);document.getElementById('nipCounter').textContent=this.value.length+'/18';document.getElementById('nipCounter').style.color=this.value.length===18?'var(--accent2)':'var(--muted)'"/><small id="nipCounter" style="color:var(--muted);font-size:.7rem;float:right">0/18</small></div>
+        <div class="form-group"><label class="form-label">NIP *</label><input class="form-control" id="rNip" placeholder="Contoh: 197001012000011001" inputmode="numeric" maxlength="18" style="font-family:'JetBrains Mono',monospace;font-size:.8rem;letter-spacing:.05em" autocomplete="off" required
+          oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,18);document.getElementById('nipCounter').textContent=this.value.length+'/18';document.getElementById('nipCounter').style.color=this.value.length===18?'var(--accent2)':'var(--muted)'"/>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.25rem">
+          <small style="color:var(--muted);font-size:.67rem"><i class="fas fa-info-circle"></i> Lihat NIP di SK pengangkatan Anda</small>
+          <small id="nipCounter" style="color:var(--muted);font-size:.7rem;font-family:'JetBrains Mono',monospace">0/18</small>
+        </div></div>
       </div>
       <div class="form-group"><label class="form-label">Jabatan *</label><select class="form-control" id="rJabatan" required><option value="">Pilih jabatan...</option></select></div>
       <div class="form-group"><label class="form-label">Email *</label><input class="form-control" type="email" id="rEmail" placeholder="email@instansi.go.id" inputmode="email" autocomplete="email" required/></div>
@@ -1057,7 +1061,53 @@ async function doReg(){
   if(!nama){showErr('rErr','rErrTxt','Nama lengkap wajib diisi.');return;}
   if(nama.length<3){showErr('rErr','rErrTxt','Nama lengkap minimal 3 karakter.');return;}
   if(!nip){showErr('rErr','rErrTxt','NIP wajib diisi.');return;}
-  if(nip.length!==18){showErr('rErr','rErrTxt',`NIP harus 18 digit angka (sekarang ${nip.length} digit). Spasi dan tanda baca diabaikan otomatis.`);return;}
+  if(nip.length!==18){showErr('rErr','rErrTxt',`NIP harus 18 digit angka (sekarang ${nip.length} digit).`);return;}
+
+  // Validasi format NIP PNS Indonesia:
+  // 8 digit = tgl lahir (YYYYMMDD) + 8 digit = tgl CPNS (YYYYMMDD) + 1 digit gender (1/2) + 3 digit urut
+  (function validateNIP(){
+    const tglLahir  = nip.slice(0,8);   // YYYYMMDD
+    const tglCPNS   = nip.slice(8,16);  // YYYYMMDD
+    const gender    = nip.slice(16,17); // 1 atau 2
+    // Cek tahun lahir masuk akal (1940–2005)
+    const thnLahir  = parseInt(tglLahir.slice(0,4));
+    const thnCPNS   = parseInt(tglCPNS.slice(0,4));
+    const blnLahir  = parseInt(tglLahir.slice(4,6));
+    const blnCPNS   = parseInt(tglCPNS.slice(4,6));
+    const tglLahirN = parseInt(tglLahir.slice(6,8));
+    const tglCPNSN  = parseInt(tglCPNS.slice(6,8));
+    if(thnLahir<1940||thnLahir>2005){
+      showErr('rErr','rErrTxt','NIP tidak valid: 8 digit pertama adalah tahun lahir (1940–2005). Periksa NIP Anda pada SK pengangkatan.');
+      return false;
+    }
+    if(blnLahir<1||blnLahir>12){
+      showErr('rErr','rErrTxt','NIP tidak valid: bulan lahir (digit 5–6) harus antara 01–12.');
+      return false;
+    }
+    if(tglLahirN<1||tglLahirN>31){
+      showErr('rErr','rErrTxt','NIP tidak valid: tanggal lahir (digit 7–8) harus antara 01–31.');
+      return false;
+    }
+    if(thnCPNS<1970||thnCPNS>2030){
+      showErr('rErr','rErrTxt','NIP tidak valid: 8 digit berikutnya adalah tahun CPNS (1970–2030). Periksa NIP Anda.');
+      return false;
+    }
+    if(blnCPNS<1||blnCPNS>12){
+      showErr('rErr','rErrTxt','NIP tidak valid: bulan CPNS (digit 13–14) harus antara 01–12.');
+      return false;
+    }
+    if(tglCPNSN<1||tglCPNSN>31){
+      showErr('rErr','rErrTxt','NIP tidak valid: tanggal CPNS (digit 15–16) harus antara 01–31.');
+      return false;
+    }
+    if(gender!=='1'&&gender!=='2'){
+      showErr('rErr','rErrTxt','NIP tidak valid: digit ke-17 harus 1 (pria) atau 2 (wanita).');
+      return false;
+    }
+    return true;
+  })();
+  // Cek apakah ada error dari validasi NIP di atas
+  if(document.getElementById('rErr').style.display!=='none') return;
   if(!jabId){showErr('rErr','rErrTxt','Pilih jabatan terlebih dahulu.');return;}
   if(!email){showErr('rErr','rErrTxt','Email wajib diisi.');return;}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showErr('rErr','rErrTxt','Format email tidak valid. Contoh: nama@instansi.go.id');return;}
