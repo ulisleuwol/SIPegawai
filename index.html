@@ -346,11 +346,12 @@ tbody td.wrap{white-space:normal;min-width:140px;}
       </div>
       <div class="alert-info alert-box"><i class="fas fa-info-circle"></i><div>Akun menunggu persetujuan admin setelah daftar.</div></div>
       <div class="form-row auth-form-row">
-        <div class="form-group"><label class="form-label">Nama Lengkap *</label><input class="form-control" id="rNama" placeholder="Nama lengkap"/></div>
-        <div class="form-group"><label class="form-label">NIP *</label><input class="form-control" id="rNip" placeholder="18 digit angka" inputmode="numeric" style="font-family:'JetBrains Mono',monospace;font-size:.8rem" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/></div>
+        <div class="form-group"><label class="form-label">Nama Lengkap *</label><input class="form-control" id="rNama" placeholder="Nama lengkap" maxlength="100" autocomplete="name" required/></div>
+        <div class="form-group"><label class="form-label">NIP *</label><input class="form-control" id="rNip" placeholder="18 digit angka" inputmode="numeric" maxlength="18" style="font-family:'JetBrains Mono',monospace;font-size:.8rem" autocomplete="off" required
+          oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,18);document.getElementById('nipCounter').textContent=this.value.length+'/18';document.getElementById('nipCounter').style.color=this.value.length===18?'var(--accent2)':'var(--muted)'"/><small id="nipCounter" style="color:var(--muted);font-size:.7rem;float:right">0/18</small></div>
       </div>
-      <div class="form-group"><label class="form-label">Jabatan *</label><select class="form-control" id="rJabatan"><option value="">Memuat jabatan...</option></select></div>
-      <div class="form-group"><label class="form-label">Email *</label><input class="form-control" type="email" id="rEmail" placeholder="email@instansi.go.id"/></div>
+      <div class="form-group"><label class="form-label">Jabatan *</label><select class="form-control" id="rJabatan" required><option value="">Pilih jabatan...</option></select></div>
+      <div class="form-group"><label class="form-label">Email *</label><input class="form-control" type="email" id="rEmail" placeholder="email@instansi.go.id" inputmode="email" autocomplete="email" required/></div>
       <div class="form-row auth-form-row">
         <div class="form-group"><label class="form-label">Password *</label><div class="pw-wrap"><input class="form-control" type="password" id="rPass" placeholder="Min. 6 karakter"/><button type="button" class="pw-toggle" onclick="togglePw('rPass')" tabindex="-1"><i class="fas fa-eye" id="eye_rPass"></i></button></div></div>
         <div class="form-group"><label class="form-label">Konfirmasi *</label><div class="pw-wrap"><input class="form-control" type="password" id="rPass2" placeholder="Ulangi"/><button type="button" class="pw-toggle" onclick="togglePw('rPass2')" tabindex="-1"><i class="fas fa-eye" id="eye_rPass2"></i></button></div></div>
@@ -1076,17 +1077,39 @@ async function doReg(){
     }
   }catch(e){ /* RPC belum ada, lanjut tanpa server check */ }
 
-  const siteUrl=window.location.origin+window.location.pathname; // → http://localhost/sipegawai/
+  const siteUrl=window.location.origin+window.location.pathname;
   const{data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:siteUrl}});
   setBtn(btn,false,'<i class="fas fa-user-plus"></i> Daftar Sekarang');
   if(error){showErr('rErr','rErrTxt',error.message);return;}
   if(!data.user){showErr('rErr','rErrTxt','Email sudah terdaftar. Silakan login.');return;}
 
-  // Simpan profile ke Supabase dengan retry otomatis jika gagal
+  // PENTING: Set session dari token signUp agar RLS mengizinkan insert profile
+  // Tanpa ini, insert akan ditolak karena auth.uid() tidak dikenal
+  if(data.session){
+    try{ await sb.auth.setSession({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token
+    }); }catch(e){ console.warn('setSession warning:', e.message); }
+  } else {
+    // Jika tidak ada session (email confirmation required), coba login dulu
+    try{
+      const{data:loginData}=await sb.auth.signInWithPassword({email,password:pass});
+      if(loginData?.session){
+        await sb.auth.setSession({
+          access_token: loginData.session.access_token,
+          refresh_token: loginData.session.refresh_token
+        });
+      }
+    }catch(e){ console.warn('auto-login warning:', e.message); }
+  }
+
+  // Tunggu sebentar agar session benar-benar aktif di Supabase
+  await new Promise(r=>setTimeout(r,500));
+
   const profilePayload={
     id: data.user.id,
     nama_lengkap: nama,
-    nip: nip,          // sudah bersih (hanya angka)
+    nip: nip,
     jabatan_id: jabId,
     email: email,
     status_akun: 'pending',
@@ -1094,11 +1117,20 @@ async function doReg(){
     updated_at: new Date().toISOString()
   };
 
+  // Validasi final payload — jangan simpan jika ada field wajib yang kosong
+  if(!profilePayload.nama_lengkap||!profilePayload.nip||!profilePayload.jabatan_id||!profilePayload.email){
+    setBtn(btn,false,'<i class="fas fa-user-plus"></i> Daftar Sekarang');
+    showErr('rErr','rErrTxt','Data tidak lengkap. Pastikan semua field terisi dengan benar.');
+    // Hapus akun yang baru dibuat agar tidak jadi ghost account
+    try{ await sb.auth.signOut(); }catch(e){}
+    return;
+  }
+
   let profSaved=false;
   let profErr=null;
 
-  // Coba upsert sampai 3 kali dengan jeda 700ms
-  for(let attempt=1; attempt<=3; attempt++){
+  // Retry upsert hingga 4 kali dengan jeda bertahap
+  for(let attempt=1; attempt<=4; attempt++){
     const res=await sb.from('profiles').upsert(profilePayload, {onConflict:'id'});
     if(!res.error){
       profSaved=true;
@@ -1106,7 +1138,7 @@ async function doReg(){
     }
     profErr=res.error;
     console.warn(`Profile save attempt ${attempt} failed:`, res.error.message);
-    if(attempt<3) await new Promise(r=>setTimeout(r,700));
+    if(attempt<4) await new Promise(r=>setTimeout(r,attempt*600));
   }
 
   if(!profSaved){
@@ -1698,12 +1730,17 @@ async function loadDash(){
   const{data:rec}=await sb.from('profiles').select('*,jabatan(nama)').eq('status_akun','pending').order('created_at',{ascending:false}).limit(5);
   const box=document.getElementById('dashPendingList');
   if(!rec||!rec.length){box.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>Tidak ada pendaftaran pending.</p></div>';return;}
-  box.innerHTML=`<table><thead><tr><th>Pegawai</th><th>NIP</th><th>Jabatan</th><th>Terdaftar</th><th>Aksi</th></tr></thead><tbody>`+
-    rec.map(p=>`<tr><td><div class="av-wrap"><div class="av">${ini(p.nama_lengkap)}</div><div class="emp-name">${p.nama_lengkap||'—'}</div></div></td><td><span class="emp-nip">${p.nip||'—'}</span></td><td>${p.jabatan?.nama||'—'}</td><td style="font-size:.77rem;color:var(--muted)">${fmtD(p.created_at)}</td>
-    <td><div style="display:flex;gap:.35rem">
-      <button class="btn-ok" onclick="confirm_('ok','Setujui Akun?','Setujui akun <strong>${(p.nama_lengkap||'').replace(/'/g,"\\'")}?</strong>',()=>approveU('${p.id}'))"><i class="fas fa-check"></i> Setujui</button>
-      <button class="btn-del" onclick="confirm_('del','Tolak Akun?','Tolak akun <strong>${(p.nama_lengkap||'').replace(/'/g,"\\'")}?</strong>',()=>rejectU('${p.id}'))"><i class="fas fa-times"></i> Tolak</button>
-    </div></td></tr>`).join('')+'</tbody></table>';
+  box.innerHTML=`<div class="tbl-scroll-hint"><i class="fas fa-arrows-alt-h"></i> Geser ke samping untuk melihat semua kolom</div><div class="tbl-wrap"><table><thead><tr><th>Pegawai</th><th>NIP</th><th>Jabatan</th><th>Terdaftar</th><th>Aksi</th></tr></thead><tbody>`+
+    rec.map(p=>`<tr>
+      <td><div class="av-wrap"><div class="av">${ini(p.nama_lengkap)}</div><div><div class="emp-name">${p.nama_lengkap||'<span style="color:var(--danger);font-size:.75rem">Data kosong</span>'}</div></div></div></td>
+      <td><span class="emp-nip">${p.nip||'—'}</span></td>
+      <td style="font-size:.82rem">${p.jabatan?.nama||'—'}</td>
+      <td style="font-size:.77rem;color:var(--muted);white-space:nowrap">${fmtD(p.created_at)}</td>
+      <td><div style="display:flex;gap:.35rem;flex-wrap:nowrap">
+        <button class="btn-ok" onclick="confirm_('ok','Setujui Akun?','Setujui akun <strong>${(p.nama_lengkap||p.id.slice(0,8)).replace(/'/g,"\\'")}?</strong>',()=>approveU('${p.id}'))"><i class="fas fa-check"></i> Setujui</button>
+        <button class="btn-del" onclick="confirm_('del','Tolak Akun?','Tolak akun ini?',()=>rejectU('${p.id}'))"><i class="fas fa-times"></i> Tolak</button>
+      </div></td>
+    </tr>`).join('')+'</tbody></table></div>';
 }
 
 // ═══════════════════════════════
